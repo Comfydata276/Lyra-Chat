@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: lyra
+      POSTGRES_PASSWORD: lyra_password
+      POSTGRES_DB: lyra_chat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./apps/backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./apps/backend:/app
+    env_file:
+      - ./apps/backend/.env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./apps/frontend
+    command: pnpm start
+    volumes:
+      - ./apps/frontend:/app
+    env_file:
+      - ./apps/frontend/.env.local
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
